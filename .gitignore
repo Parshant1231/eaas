@@ -1,0 +1,22 @@
+# Secrets and local config
+.env
+!.env.example
+*.pem
+*.key
+
+# Terraform: state can contain secrets, so it never goes in Git
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+
+# Node
+node_modules/
+
+# Jenkins local data (if we bind-mount it)
+jenkins_home/
+
+# OS noise
+.DS_Store
