@@ -20,3 +20,7 @@ jenkins_home/
 
 # OS noise
 .DS_Store
+
+# Terraform local config and saved plans
+backend.hcl
+*.tfplan

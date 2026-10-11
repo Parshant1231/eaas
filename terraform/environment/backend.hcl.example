@@ -1,0 +1,4 @@
+bucket       = "eaas-tfstate-xxxxxxxx"
+region       = "ap-south-1"
+encrypt      = true
+use_lockfile = true
