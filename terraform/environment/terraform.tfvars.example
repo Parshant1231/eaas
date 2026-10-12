@@ -2,5 +2,5 @@ env_id           = "dev1"
 owner            = "your-name"
 size             = "small"
 ttl_hours        = 1
-allowed_ssh_cidr = "203.0.113.7/32" # your public IP from: curl -s https://checkip.amazonaws.com
+operator_cidr = "203.0.113.7/32" # your public IP from: curl -s https://checkip.amazonaws.com
 public_key       = "ssh-ed25519 AAAA... eaas-dev"

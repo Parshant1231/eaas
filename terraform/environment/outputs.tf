@@ -13,3 +13,7 @@ output "public_ips" {
 output "first_public_ip" {
   value = module.compute.public_ips[0]
 }
+
+output "private_ips" {
+  value = module.compute.private_ips
+}

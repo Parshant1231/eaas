@@ -1,0 +1,20 @@
+- name: Install k3s agent
+  ansible.builtin.shell: |
+    set -o pipefail
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION='{{ k3s_version }}' sh -s - agent
+  args:
+    executable: /bin/bash
+    creates: /usr/local/bin/k3s
+  environment:
+    K3S_URL: "https://{{ hostvars[groups['role_server'][0]].private_ip_address }}:6443"
+    K3S_TOKEN: "{{ hostvars[groups['role_server'][0]].k3s_node_token }}"
+  no_log: true
+
+- name: Wait for this agent to be Ready (checked from the server)
+  ansible.builtin.command: k3s kubectl wait --for=condition=Ready node/{{ ec2_tags.Name }} --timeout=60s
+  delegate_to: "{{ groups['role_server'][0] }}"
+  register: agent_ready
+  until: agent_ready.rc == 0
+  retries: 10
+  delay: 6
+  changed_when: false

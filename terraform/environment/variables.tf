@@ -50,7 +50,7 @@ variable "cost_center" {
   default = "eaas-portfolio"
 }
 
-variable "allowed_ssh_cidr" {
+variable "operator_cidr" {
   type = string
 }
 

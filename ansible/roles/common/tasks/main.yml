@@ -1,0 +1,42 @@
+- name: Set hostname from the Name tag
+  ansible.builtin.hostname:
+    name: "{{ ec2_tags.Name }}"
+
+- name: Keep cloud-init from resetting the hostname
+  ansible.builtin.copy:
+    dest: /etc/cloud/cloud.cfg.d/99-preserve-hostname.cfg
+    content: "preserve_hostname: true\n"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Map hostname to loopback
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1\s'
+    line: "127.0.1.1 {{ ec2_tags.Name }}"
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+      - jq
+      - unattended-upgrades
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Harden sshd
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/10-eaas-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PermitRootLogin no
+      X11Forwarding no
+      MaxAuthTries 3
+  notify: Reload sshd

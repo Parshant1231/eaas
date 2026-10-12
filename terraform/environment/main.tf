@@ -1,15 +1,15 @@
 locals {
   sizes = {
     small  = { instance_type = "t3.small", node_count = 1 }
-    medium = { instance_type = "t3.medium", node_count = 2 }
+    medium = { instance_type = "t3.small", node_count = 2 }
   }
   size_cfg = local.sizes[var.size]
 }
 
 module "network" {
-  source           = "../modules/network"
-  env_id           = var.env_id
-  allowed_ssh_cidr = var.allowed_ssh_cidr
+  source        = "../modules/network"
+  env_id        = var.env_id
+  operator_cidr = var.operator_cidr
 }
 
 module "compute" {

@@ -1,0 +1,32 @@
+- name: Install k3s server
+  ansible.builtin.shell: |
+    set -o pipefail
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION='{{ k3s_version }}' sh -s - server --tls-san {{ ansible_host }} --write-kubeconfig-mode 0600 --disable traefik --disable servicelb
+  args:
+    executable: /bin/bash
+    creates: /usr/local/bin/k3s
+
+- name: Wait for the API port
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 6443
+    timeout: 120
+
+- name: Wait for the server node to be Ready
+  ansible.builtin.command: k3s kubectl wait --for=condition=Ready node --all --timeout=60s
+  register: server_ready
+  until: server_ready.rc == 0
+  retries: 10
+  delay: 6
+  changed_when: false
+
+- name: Read the join token
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: k3s_token_raw
+  no_log: true
+
+- name: Keep the token for the agent play
+  ansible.builtin.set_fact:
+    k3s_node_token: "{{ k3s_token_raw.content | b64decode | trim }}"
+  no_log: true
