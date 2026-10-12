@@ -24,3 +24,6 @@ jenkins_home/
 # Terraform local config and saved plans
 backend.hcl
 *.tfplan
+
+# Ansible generated inventory (per-environment, rendered at run time)
+ansible/inventory/generated/
