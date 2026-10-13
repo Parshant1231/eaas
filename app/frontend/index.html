@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>EaaS sample app</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 36rem; margin: 3rem auto; padding: 0 1rem; }
+    button { font-size: 1rem; padding: .5rem 1rem; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>EaaS sample app</h1>
+  <p>Frontend (nginx) &rarr; API (Node) &rarr; PostgreSQL.</p>
+  <button id="hit">Hit the API</button>
+  <pre id="out">Click the button.</pre>
+  <script>
+    document.getElementById('hit').addEventListener('click', async () => {
+      const out = document.getElementById('out');
+      try {
+        const r = await fetch('/api/hits');
+        out.textContent = r.status + '\n' + await r.text();
+      } catch (e) {
+        out.textContent = 'request failed: ' + e;
+      }
+    });
+  </script>
+</body>
+</html>
