@@ -98,3 +98,30 @@ resource "aws_vpc_security_group_ingress_rule" "grafana_nodeport" {
   ip_protocol       = "tcp"
   description       = "Grafana (NodePort) from operator IP only"
 }
+
+resource "aws_vpc_security_group_ingress_rule" "k8s_api" {
+  security_group_id = aws_security_group.nodes.id
+  cidr_ipv4         = var.operator_cidr
+  from_port         = 6443
+  to_port           = 6443
+  ip_protocol       = "tcp"
+  description       = "kubectl and helm from operator IP only"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "app_nodeport" {
+  security_group_id = aws_security_group.nodes.id
+  cidr_ipv4         = var.operator_cidr
+  from_port         = 30080
+  to_port           = 30080
+  ip_protocol       = "tcp"
+  description       = "Sample app (NodePort) from operator IP only"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "grafana_nodeport" {
+  security_group_id = aws_security_group.nodes.id
+  cidr_ipv4         = var.operator_cidr
+  from_port         = 30300
+  to_port           = 30300
+  ip_protocol       = "tcp"
+  description       = "Grafana (NodePort) from operator IP only"
+}
