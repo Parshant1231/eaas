@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: eaas-alerts
+  namespace: monitoring
+spec:
+  groups:
+    - name: eaas.nodes
+      rules:
+        - alert: NodeDown
+          expr: up{job="node-exporter-host"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Node {{ $labels.instance }} is down'
+            description: 'node_exporter on {{ $labels.instance }} has been unreachable for over 1 minute.'
+        - alert: HighCpu
+          expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'High CPU on {{ $labels.instance }}'
+            description: 'CPU above 80% for 2 minutes (now {{ $value | printf "%.0f" }}%).'

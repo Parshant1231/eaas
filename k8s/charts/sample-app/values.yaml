@@ -1,0 +1,43 @@
+secretName: postgres-credentials
+
+frontend:
+  image:
+    repository: ghcr.io/parshant1231/eaas-frontend
+    tag: "0.1.0"
+  nodePort: 30080
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+api:
+  image:
+    repository: ghcr.io/parshant1231/eaas-api
+    tag: "0.1.0"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  hpa:
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 60
+
+postgres:
+  image: postgres:16-alpine
+  database: app
+  user: app
+  storage: 1Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
