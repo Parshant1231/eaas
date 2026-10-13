@@ -13,3 +13,16 @@ Work in progress. Phase 1 of 9: foundation and local Jenkins.
 
 <!-- Sections added as we build: Architecture, Quick start, Demo flow,
 Results, What broke and how I fixed it, Known limitations -->
+
+## Sample application and monitoring
+A three-tier sample app (nginx frontend, Node API, PostgreSQL) is deployed to each
+environment with a Helm chart (`k8s/charts/sample-app`): health probes, resource limits,
+an HPA on the API and default-deny NetworkPolicies. Prometheus and Grafana are installed
+with a trimmed kube-prometheus-stack (`k8s/monitoring`), with two alerts (node down,
+high CPU) and a per-environment dashboard generated from a template.
+
+Deploy to an existing environment:
+```bash
+./scripts/fetch-kubeconfig.sh <env-id>
+./scripts/deploy-k8s.sh <env-id>
+```
