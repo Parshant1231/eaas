@@ -1,0 +1,184 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        timeout(time: 45, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+    }
+
+    parameters {
+        string(name: 'ENV_NAME', defaultValue: 'demo', description: '3-20 chars: lowercase letters, digits, hyphens; starts with a letter')
+        choice(name: 'SIZE', choices: ['small', 'medium'], description: 'small = app only, medium = app + monitoring')
+        choice(name: 'TTL_HOURS', choices: ['1', '2', '4'], description: 'Hours until auto-destroy')
+        string(name: 'OWNER', defaultValue: 'kelvrix', description: 'Owner tag: 3-31 chars, lowercase letters, digits, hyphens')
+        choice(name: 'FAIL_AT', choices: ['none', 'after-terraform', 'after-ansible'], description: 'TEST HOOK: force a failure to prove cleanup. Leave as none.')
+    }
+
+    environment {
+        AWS_ACCESS_KEY_ID     = credentials('eaas-aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('eaas-aws-secret-access-key')
+        AWS_DEFAULT_REGION    = 'ap-south-1'
+        SSH_KEY               = credentials('eaas-ssh-key')
+        TF_PLUGIN_CACHE_DIR   = '/var/jenkins_home/.terraform-plugin-cache'
+    }
+
+    stages {
+        stage('Validate input') {
+            steps {
+                sh '''#!/usr/bin/env bash
+                    set -euo pipefail
+                    [[ "$ENV_NAME" =~ ^[a-z][a-z0-9-]{2,19}$ ]] || { echo "ERROR: invalid ENV_NAME"; exit 1; }
+                    [[ "$SIZE" =~ ^(small|medium)$ ]] || { echo "ERROR: invalid SIZE"; exit 1; }
+                    [[ "$TTL_HOURS" =~ ^(1|2|4)$ ]] || { echo "ERROR: invalid TTL_HOURS"; exit 1; }
+                    [[ "$OWNER" =~ ^[a-z][a-z0-9-]{2,30}$ ]] || { echo "ERROR: invalid OWNER"; exit 1; }
+                    echo "input OK: env=$ENV_NAME size=$SIZE ttl=${TTL_HOURS}h owner=$OWNER"
+                '''
+                script {
+                    currentBuild.displayName = "#${env.BUILD_NUMBER} ${params.ENV_NAME} (${params.SIZE})"
+                }
+            }
+        }
+
+        stage('Prepare') {
+            steps {
+                script {
+                    env.START_EPOCH = sh(returnStdout: true, script: 'date +%s').trim()
+                    env.EXPIRES_AT = sh(returnStdout: true, script: 'date -u -d "+${TTL_HOURS} hours" +%Y-%m-%dT%H:%M:%SZ').trim()
+                    env.OPERATOR_IP = sh(returnStdout: true, script: '''#!/usr/bin/env bash
+                        set -euo pipefail
+                        IP="$(curl -4 -fsS --retry 3 --max-time 10 https://checkip.amazonaws.com | tr -d '[:space:]')"
+                        [[ "$IP" =~ ^([0-9]{1,3}[.]){3}[0-9]{1,3}$ ]] || { echo "could not determine operator IP" >&2; exit 1; }
+                        echo "$IP"
+                    ''').trim()
+                }
+                echo "expires at ${env.EXPIRES_AT}; operator access from ${env.OPERATOR_IP}/32"
+            }
+        }
+
+        stage('Provision infrastructure') {
+            steps {
+                lock('eaas-provision') {
+                    sh './scripts/capacity-check.sh "$ENV_NAME" 3'
+                    sh '''#!/usr/bin/env bash
+                        set -euo pipefail
+                        export TF_VAR_owner="$OWNER" TF_VAR_size="$SIZE" TF_VAR_ttl_hours="$TTL_HOURS"
+                        export TF_VAR_expires_at="$EXPIRES_AT" TF_VAR_operator_cidr="${OPERATOR_IP}/32"
+                        export TF_VAR_public_key="$(ssh-keygen -y -f "$SSH_KEY")"
+                        ./scripts/tf-env.sh plan "$ENV_NAME"
+                    '''
+                    script { env.PROVISION_STARTED = 'true' }
+                    sh './scripts/tf-env.sh apply "$ENV_NAME"'
+                }
+            }
+        }
+
+        stage('Test hook: after terraform') {
+            when { expression { params.FAIL_AT == 'after-terraform' } }
+            steps { error('Forced failure after terraform (FAIL_AT test hook)') }
+        }
+
+        stage('Configure nodes (Ansible)') {
+            steps {
+                retry(2) {
+                    sh '''#!/usr/bin/env bash
+                        set -euo pipefail
+                        export ANSIBLE_PRIVATE_KEY_FILE="$SSH_KEY"
+                        export ANSIBLE_CONFIG="$PWD/ansible/ansible.cfg"
+                        INV="$(./scripts/render-inventory.sh "$ENV_NAME")"
+                        cd ansible
+                        ansible -i "$INV" all -m ansible.builtin.wait_for_connection -a "timeout=240 delay=5"
+                        ansible-playbook -i "$INV" playbooks/site.yml
+                    '''
+                }
+            }
+        }
+
+        stage('Test hook: after ansible') {
+            when { expression { params.FAIL_AT == 'after-ansible' } }
+            steps { error('Forced failure after ansible (FAIL_AT test hook)') }
+        }
+
+        stage('Deploy sample app') {
+            steps {
+                retry(2) {
+                    sh '''#!/usr/bin/env bash
+                        set -euo pipefail
+                        export EAAS_SSH_KEY="$SSH_KEY"
+                        export KUBECONFIG_OUT="$PWD/.kube/${ENV_NAME}.yaml"
+                        export KUBECONFIG="$KUBECONFIG_OUT"
+                        ./scripts/fetch-kubeconfig.sh "$ENV_NAME" > /dev/null
+                        ./scripts/deploy-k8s.sh "$ENV_NAME" app
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy monitoring and dashboard') {
+            when { expression { params.SIZE == 'medium' } }
+            steps {
+                retry(2) {
+                    sh '''#!/usr/bin/env bash
+                        set -euo pipefail
+                        export KUBECONFIG="$PWD/.kube/${ENV_NAME}.yaml"
+                        ./scripts/deploy-k8s.sh "$ENV_NAME" monitoring
+                    '''
+                }
+            }
+        }
+
+        stage('Smoke test') {
+            steps {
+                sh './scripts/smoke-test.sh "$ENV_NAME" "$SIZE"'
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                def result = currentBuild.currentResult
+                def cleaned = 'n/a'
+                if (result != 'SUCCESS' && env.PROVISION_STARTED == 'true') {
+                    echo "Build ${result}: destroying environment ${params.ENV_NAME} so nothing keeps billing"
+                    try {
+                        sh '''#!/usr/bin/env bash
+                            set -uo pipefail
+                            rc=0
+                            ./scripts/tf-env.sh destroy "$ENV_NAME" || rc=1
+                            ./scripts/verify-cleanup.sh "$ENV_NAME" || rc=1
+                            exit $rc
+                        '''
+                        cleaned = 'yes'
+                    } catch (err) {
+                        cleaned = 'NO'
+                        echo "WARNING: automatic cleanup did not complete. Run the eaas-destroy job for ${params.ENV_NAME}. (${err})"
+                    }
+                }
+                withEnv(["BUILD_RESULT=${result}", "CLEANED_UP=${cleaned}"]) {
+                    sh '''#!/usr/bin/env bash
+                        set -uo pipefail
+                        END=$(date +%s)
+                        IP="$(./scripts/server-ip.sh "$ENV_NAME" 2>/dev/null || true)"
+                        jq -n \
+                          --arg envid "$ENV_NAME" --arg result "$BUILD_RESULT" --arg size "${SIZE:-}" \
+                          --arg ttl "${TTL_HOURS:-}" --arg owner "${OWNER:-}" --arg expires "${EXPIRES_AT:-}" \
+                          --arg ip "$IP" --arg cleaned "$CLEANED_UP" --arg build "$BUILD_URL" \
+                          --argjson secs "$(( END - ${START_EPOCH:-$END} ))" '
+                          {
+                            env_id: $envid, result: $result, size: $size, owner: $owner,
+                            ttl_hours: (try ($ttl | tonumber) catch null),
+                            expires_at: (if $expires == "" then null else $expires end),
+                            creation_seconds: $secs, cleaned_up: $cleaned, build_url: $build,
+                            app_url: (if $result == "SUCCESS" and $ip != "" then "http://" + $ip + ":30080" else null end),
+                            grafana_url: (if $result == "SUCCESS" and $ip != "" and $size == "medium" then "http://" + $ip + ":30300" else null end)
+                          }' > status.json
+                        cat status.json
+                    '''
+                }
+                archiveArtifacts artifacts: 'status.json', allowEmptyArchive: true
+            }
+            sh 'rm -rf .kube'
+        }
+    }
+}

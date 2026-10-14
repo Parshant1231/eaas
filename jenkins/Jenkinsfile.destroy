@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+    }
+
+    parameters {
+        string(name: 'ENV_NAME', defaultValue: '', description: 'Environment id to destroy')
+    }
+
+    environment {
+        AWS_ACCESS_KEY_ID     = credentials('eaas-aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('eaas-aws-secret-access-key')
+        AWS_DEFAULT_REGION    = 'ap-south-1'
+        TF_PLUGIN_CACHE_DIR   = '/var/jenkins_home/.terraform-plugin-cache'
+    }
+
+    stages {
+        stage('Validate input') {
+            steps {
+                sh '''#!/usr/bin/env bash
+                    set -euo pipefail
+                    [[ "$ENV_NAME" =~ ^[a-z][a-z0-9-]{2,19}$ ]] || { echo "ERROR: invalid ENV_NAME"; exit 1; }
+                    echo "destroying environment: $ENV_NAME"
+                '''
+                script {
+                    currentBuild.displayName = "#${env.BUILD_NUMBER} destroy ${params.ENV_NAME}"
+                }
+            }
+        }
+
+        stage('Destroy') {
+            steps {
+                sh './scripts/tf-env.sh destroy "$ENV_NAME"'
+            }
+        }
+
+        stage('Verify cleanup') {
+            steps {
+                sh './scripts/verify-cleanup.sh "$ENV_NAME"'
+            }
+        }
+    }
+}
