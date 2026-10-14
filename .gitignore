@@ -27,3 +27,7 @@ backend.hcl
 
 # Ansible generated inventory (per-environment, rendered at run time)
 ansible/inventory/generated/
+
+# Pipeline working data (never committed)
+.tfdata/
+.kube/

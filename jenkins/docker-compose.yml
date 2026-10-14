@@ -1,10 +1,21 @@
 services:
   jenkins:
-    image: jenkins/jenkins:lts-jdk21
+    build:
+      context: ..
+      dockerfile: jenkins/Dockerfile
+      args:
+        TERRAFORM_VERSION: ${TERRAFORM_VERSION:?run scripts/build-jenkins-image.sh}
+        AWSCLI_VERSION: ${AWSCLI_VERSION:?run scripts/build-jenkins-image.sh}
+        KUBECTL_VERSION: ${KUBECTL_VERSION:?run scripts/build-jenkins-image.sh}
+        HELM_VERSION: ${HELM_VERSION:?run scripts/build-jenkins-image.sh}
+    image: eaas-jenkins:local
     container_name: eaas-jenkins
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"
+    environment:
+      EAAS_STATE_BUCKET: ${EAAS_STATE_BUCKET:?run scripts/build-jenkins-image.sh}
+      AWS_DEFAULT_REGION: ap-south-1
     volumes:
       - jenkins_home:/var/jenkins_home
 
