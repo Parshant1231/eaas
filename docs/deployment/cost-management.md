@@ -17,3 +17,9 @@
 ## Verify cleanup after a test
 aws ec2 describe-instances --filters "Name=tag:env-id,Values=<env>"
 aws ec2 describe-vpcs --filters "Name=tag:env-id,Values=<env>"
+
+## Pipeline controls
+- Maximum 3 environments, enforced under a lock before any resource is created
+- Failed builds destroy what they created and verify it (scripts/verify-cleanup.sh)
+- Dedicated IAM user limited to ap-south-1 and eaas-tagged deletes
+- TTL is a tag today; automatic expiry arrives with the Phase 7 Lambda

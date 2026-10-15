@@ -26,3 +26,10 @@ Deploy to an existing environment:
 ./scripts/fetch-kubeconfig.sh <env-id>
 ./scripts/deploy-k8s.sh <env-id>
 ```
+
+## Pipeline
+Two Jenkins pipelines drive everything. `eaas-create` validates input, checks capacity,
+runs Terraform, configures nodes with Ansible, deploys the app (and monitoring for
+medium environments), smoke tests it, and writes `status.json`. If any step fails after
+provisioning has started, it destroys what it created and verifies nothing is left.
+`eaas-destroy` removes an environment idempotently. See `docs/decisions/` (ADR-009 to ADR-011).
