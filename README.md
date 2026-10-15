@@ -33,3 +33,17 @@ runs Terraform, configures nodes with Ansible, deploys the app (and monitoring f
 medium environments), smoke tests it, and writes `status.json`. If any step fails after
 provisioning has started, it destroys what it created and verifies nothing is left.
 `eaas-destroy` removes an environment idempotently. See `docs/decisions/` (ADR-009 to ADR-011).
+
+## Portal
+A small web portal (`portal/`, Node.js/TypeScript API plus plain HTML/JS) creates, lists
+and destroys environments through the Jenkins pipelines, shows live stage progress and
+streams the Jenkins console. It keeps no database: AWS tags and the Jenkins API are the
+source of truth. It binds to localhost and guards against DNS rebinding and CSRF.
+
+```bash
+cd portal
+cp .env.example .env     # fill in Jenkins user/token and the read-only AWS profile
+npm install
+npm run dev              # http://localhost:3000
+npm test
+```
