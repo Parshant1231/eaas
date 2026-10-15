@@ -31,3 +31,6 @@ ansible/inventory/generated/
 # Pipeline working data (never committed)
 .tfdata/
 .kube/
+
+# Portal build output
+portal/dist/

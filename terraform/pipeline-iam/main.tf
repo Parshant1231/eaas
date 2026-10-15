@@ -131,3 +131,25 @@ resource "aws_iam_user_policy_attachment" "pipeline" {
   user       = aws_iam_user.pipeline.name
   policy_arn = aws_iam_policy.pipeline.arn
 }
+
+data "aws_iam_policy_document" "portal" {
+  statement {
+    sid       = "ReadEnvironmentState"
+    actions   = ["ec2:DescribeVpcs", "ec2:DescribeInstances"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "portal" {
+  name   = "eaas-portal-readonly"
+  policy = data.aws_iam_policy_document.portal.json
+}
+
+resource "aws_iam_user" "portal" {
+  name = "eaas-portal"
+}
+
+resource "aws_iam_user_policy_attachment" "portal" {
+  user       = aws_iam_user.portal.name
+  policy_arn = aws_iam_policy.portal.arn
+}

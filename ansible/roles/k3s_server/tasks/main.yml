@@ -1,7 +1,7 @@
 - name: Install k3s server
   ansible.builtin.shell: |
     set -o pipefail
-    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION='{{ k3s_version }}' sh -s - server --tls-san {{ ansible_host }} --write-kubeconfig-mode 0600 --disable traefik --disable servicelb --disable traefik --disable servicelb
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION='{{ k3s_version }}' sh -s - server --tls-san {{ ansible_host }} --write-kubeconfig-mode 0600 --disable traefik --disable servicelb
   args:
     executable: /bin/bash
     creates: /usr/local/bin/k3s

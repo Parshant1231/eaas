@@ -24,6 +24,7 @@ provider "aws" {
       ttl-hours   = tostring(var.ttl_hours)
       expires-at  = var.expires_at
       cost-center = var.cost_center
+      size        = var.size
     }
   }
 }
