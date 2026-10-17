@@ -17,6 +17,8 @@ kubeEtcd:
   enabled: false
 
 prometheusOperator:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
   admissionWebhooks:
     enabled: false
   tls:
@@ -30,6 +32,8 @@ prometheusOperator:
       memory: 128Mi
 
 kube-state-metrics:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
   resources:
     requests:
       cpu: 25m
@@ -39,6 +43,8 @@ kube-state-metrics:
       memory: 128Mi
 
 grafana:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
   enabled: true
   defaultDashboardsEnabled: false
   admin:
@@ -64,6 +70,8 @@ grafana:
 
 prometheus:
   prometheusSpec:
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: "true"
     retention: 6h
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false

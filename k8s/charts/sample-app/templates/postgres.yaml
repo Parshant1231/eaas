@@ -27,6 +27,8 @@ spec:
       labels:
         app: postgres
     spec:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: "true"
       securityContext:
         fsGroup: 70
       containers:

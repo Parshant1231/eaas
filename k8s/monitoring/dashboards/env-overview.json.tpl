@@ -2,6 +2,19 @@
   "title": "EaaS environment: __ENV_ID__",
   "uid": "eaas-__ENV_ID__",
   "tags": ["eaas"],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": false,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
   "schemaVersion": 39,
   "version": 1,
   "refresh": "10s",
@@ -54,6 +67,15 @@
         { "refId": "A", "legendFormat": "current", "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=\"app\",horizontalpodautoscaler=\"api\"}" },
         { "refId": "B", "legendFormat": "desired", "expr": "kube_horizontalpodautoscaler_status_desired_replicas{namespace=\"app\",horizontalpodautoscaler=\"api\"}" }
       ]
+    },
+    {
+      "id": 8, "type": "annolist", "title": "Failure injections (time to recover)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "options": {
+        "onlyFromThisDashboard": true, "onlyInTimeRange": false, "tags": ["failure-injection"],
+        "limit": 10, "showUser": false, "showTime": true, "showTags": true,
+        "navigateBefore": "10m", "navigateAfter": "10m", "navigateToPanel": false
+      }
     }
   ]
 }
