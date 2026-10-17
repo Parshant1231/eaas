@@ -14,6 +14,9 @@ const aws = (o: Partial<AwsEnvironment> = {}): AwsEnvironment => ({
   expiresAt: '2026-10-20T13:30:00Z',
   serverPublicIp: '13.201.10.20',
   instanceCount: 2,
+  vpcId: 'vpc-0abc12345',
+  instanceIds: ['i-0aaa11111', 'i-0bbb22222'],
+  launchedAt: '2026-10-20T11:40:00Z',
   ...o,
 });
 

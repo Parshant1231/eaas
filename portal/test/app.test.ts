@@ -35,10 +35,13 @@ const fakeAws: AwsReader = {
   async listEnvironments() {
     return awsEnvs;
   },
+  async extendExpiry() {
+    /* not used in these tests */
+  },
 };
 
 function readyEnv(id: string): void {
-  awsEnvs.push({ envId: id, owner: 'kelvrix', size: 'small', ttlHours: 1, expiresAt: '2099-01-01T00:00:00Z', serverPublicIp: '13.201.10.20', instanceCount: 1 });
+  awsEnvs.push({ envId: id, owner: 'kelvrix', size: 'small', ttlHours: 1, expiresAt: '2099-01-01T00:00:00Z', serverPublicIp: '13.201.10.20', instanceCount: 1, vpcId: 'vpc-0abc12345', instanceIds: ['i-0abc12345'], launchedAt: null });
   builds.push({ job: 'create', number: nextNumber++, envId: id, queued: false, building: false, result: 'SUCCESS', timestamp: Date.now() - 600_000, durationMs: 540_000, size: 'small', ttlHours: 1, owner: 'kelvrix' });
 }
 
@@ -173,7 +176,7 @@ describe('destroy', () => {
   });
 
   it('refuses while the environment is still being created', async () => {
-    awsEnvs.push({ envId: 'busy1', owner: 'kelvrix', size: 'small', ttlHours: 1, expiresAt: null, serverPublicIp: null, instanceCount: 0 });
+    awsEnvs.push({ envId: 'busy1', owner: 'kelvrix', size: 'small', ttlHours: 1, expiresAt: null, serverPublicIp: null, instanceCount: 0, vpcId: 'vpc-0abc12345', instanceIds: [], launchedAt: null });
     builds.push({ job: 'create', number: 1, envId: 'busy1', queued: false, building: true, result: null, timestamp: Date.now(), durationMs: 0, size: 'small', ttlHours: 1, owner: 'kelvrix' });
     const res = await del('/api/environments/busy1');
     assert.equal(res.status, 409);
