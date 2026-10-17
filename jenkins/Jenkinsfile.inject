@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        timeout(time: 25, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '40'))
+    }
+
+    parameters {
+        string(name: 'ENV_NAME', defaultValue: '', description: 'Environment id (must be a ready MEDIUM environment)')
+        choice(name: 'FAILURE', choices: ['pod-kill', 'service-crash', 'node-kill', 'cpu-spike', 'disk-fill'], description: 'Failure to inject')
+    }
+
+    environment {
+        AWS_ACCESS_KEY_ID     = credentials('eaas-aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('eaas-aws-secret-access-key')
+        AWS_DEFAULT_REGION    = 'ap-south-1'
+        SSH_KEY               = credentials('eaas-ssh-key')
+    }
+
+    stages {
+        stage('Validate input') {
+            steps {
+                sh '''#!/usr/bin/env bash
+                    set -euo pipefail
+                    [[ "$ENV_NAME" =~ ^[a-z][a-z0-9-]{2,19}$ ]] || { echo "ERROR: invalid ENV_NAME"; exit 1; }
+                    [[ "$FAILURE" =~ ^(pod-kill|service-crash|node-kill|cpu-spike|disk-fill)$ ]] || { echo "ERROR: invalid FAILURE"; exit 1; }
+                    echo "input OK: env=$ENV_NAME failure=$FAILURE"
+                '''
+                script {
+                    currentBuild.displayName = "#${env.BUILD_NUMBER} ${params.FAILURE} on ${params.ENV_NAME}"
+                }
+            }
+        }
+
+        stage('Inject and measure') {
+            steps {
+                lock("eaas-inject-${params.ENV_NAME}") {
+                    sh '''#!/usr/bin/env bash
+                        set -euo pipefail
+                        export EAAS_SSH_KEY="$SSH_KEY"
+                        export KUBECONFIG_OUT="$PWD/.kube/${ENV_NAME}.yaml"
+                        export KUBECONFIG="$KUBECONFIG_OUT"
+                        ./scripts/fetch-kubeconfig.sh "$ENV_NAME" > /dev/null
+                        ./scripts/inject-failure.sh "$ENV_NAME" "$FAILURE"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'recovery.json', allowEmptyArchive: true
+            sh 'rm -rf .kube'
+        }
+    }
+}
