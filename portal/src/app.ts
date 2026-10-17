@@ -4,6 +4,9 @@ import { buildEnvironmentList, occupiesCapacity } from './envs.js';
 import { JenkinsError, UpstreamError } from './errors.js';
 import type { JenkinsApi } from './jenkins.js';
 import type { JobKind } from './types.js';
+import { startReaperPoller } from './reaper.js';
+import type { DestroyQueue } from './sqs.js';
+import { registerTtlRoutes } from './ttl-routes.js';
 import { isValidEnvId, parseCreateRequest } from './validation.js';
 
 export interface AppConfig {
@@ -16,6 +19,7 @@ export interface AppConfig {
 export interface Deps {
   jenkins: JenkinsApi;
   aws: AwsReader;
+  queue?: DestroyQueue;
   config: AppConfig;
 }
 
@@ -162,6 +166,8 @@ export function createApp(deps: Deps): Express {
     res.status(202).json({ accepted: true, name: id });
   });
 
+  registerTtlRoutes(app, { aws, loadEnvironments, serialize, now });
+
   app.get('/api/builds/:job/:number/stages', async (req, res) => {
     const job = parseJob(req.params.job);
     const number = parseBuildNumber(req.params.number);
@@ -231,6 +237,17 @@ export function createApp(deps: Deps): Express {
     console.error('unexpected error:', err instanceof Error ? err.message : 'unknown');
     res.status(500).json({ error: 'Internal error' });
   });
+
+  if (deps.queue) {
+    startReaperPoller({
+      queue: deps.queue,
+      loadEnvironments,
+      triggerDestroy: (envId) => jenkins.triggerDestroy(envId),
+      serialize,
+      now,
+    });
+    console.log('TTL poller started: expired environments are destroyed automatically');
+  }
 
   return app;
 }

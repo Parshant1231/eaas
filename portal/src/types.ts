@@ -1,3 +1,5 @@
+import type { CostEstimate } from './cost.js';
+
 export type Size = 'small' | 'medium';
 export type Ttl = 1 | 2 | 4;
 export type JobKind = 'create' | 'destroy';
@@ -11,6 +13,9 @@ export interface AwsEnvironment {
   expiresAt: string | null;
   serverPublicIp: string | null;
   instanceCount: number;
+  vpcId: string;
+  instanceIds: string[];
+  launchedAt: string | null;
 }
 
 /** One Jenkins build (or a queued build that has not started yet). */
@@ -39,6 +44,7 @@ export interface EnvironmentView {
   ttlHours: number | null;
   expiresAt: string | null;
   minutesRemaining: number | null;
+  cost: CostEstimate | null;
   appUrl: string | null;
   grafanaUrl: string | null;
   latestBuild: {

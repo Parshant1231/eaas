@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-ec2": "^3.1152.0",
+    "@aws-sdk/client-sqs": "^3.1152.0",
     "express": "^5.3.0"
   },
   "devDependencies": {

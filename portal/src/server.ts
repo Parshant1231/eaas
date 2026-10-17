@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { createApp } from './app.js';
 import { createAwsReader } from './aws.js';
 import { createJenkinsClient } from './jenkins.js';
+import { createDestroyQueue } from './sqs.js';
 import { isValidOwner } from './validation.js';
 
 function required(name: string): string {
@@ -14,8 +15,17 @@ function required(name: string): string {
 required('AWS_PROFILE');
 
 const port = Number(process.env.PORT ?? 3000);
+const region = process.env.AWS_REGION ?? 'ap-south-1';
 const owner = process.env.PORTAL_OWNER ?? 'kelvrix';
 if (!isValidOwner(owner)) throw new Error('PORTAL_OWNER must be 3-31 chars: lowercase letters, digits, hyphens');
+
+const queueUrl = process.env.REAPER_QUEUE_URL?.trim() || undefined;
+if (queueUrl !== undefined && !/^https:\/\/sqs\.[a-z0-9-]+\.amazonaws\.com\/\d{12}\/[A-Za-z0-9_-]{1,80}$/.test(queueUrl)) {
+  throw new Error('REAPER_QUEUE_URL does not look like an SQS queue URL');
+}
+if (queueUrl === undefined) {
+  console.log('TTL poller disabled: REAPER_QUEUE_URL is not set (the Lambda backstop still terminates instances)');
+}
 
 const app = createApp({
   jenkins: createJenkinsClient({
@@ -25,7 +35,8 @@ const app = createApp({
     createJob: 'eaas-create',
     destroyJob: 'eaas-destroy',
   }),
-  aws: createAwsReader(process.env.AWS_REGION ?? 'ap-south-1'),
+  aws: createAwsReader(region),
+  queue: queueUrl !== undefined ? createDestroyQueue(region, queueUrl) : undefined,
   config: {
     owner,
     maxEnvironments: 3,

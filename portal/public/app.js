@@ -12,6 +12,7 @@ const ui = {
   ttl: document.getElementById('ttl'),
   createBtn: document.getElementById('create-btn'),
   message: document.getElementById('message'),
+  estimate: document.getElementById('estimate'),
   banner: document.getElementById('banner'),
   body: document.getElementById('env-body'),
   empty: document.getElementById('empty'),
@@ -86,6 +87,18 @@ function linkCell(env) {
   return cell;
 }
 
+function costCell(env) {
+  const cell = document.createElement('td');
+  if (!env.cost || env.cost.soFar === null) {
+    cell.textContent = '–';
+    return cell;
+  }
+  cell.textContent = '$' + env.cost.soFar.toFixed(2);
+  const projected = env.cost.projected !== null ? ', about $' + env.cost.projected.toFixed(2) + ' if it runs to expiry' : '';
+  cell.title = '$' + env.cost.hourly.toFixed(3) + ' per hour' + projected + ' (an estimate, not a bill)';
+  return cell;
+}
+
 function actionCell(env) {
   const cell = document.createElement('td');
 
@@ -97,6 +110,15 @@ function actionCell(env) {
     openBuild(build.job, build.number, env.envId + ': ' + build.job + ' #' + build.number);
   });
   cell.appendChild(logs);
+
+  const extend = el('button', '+1h', 'secondary');
+  extend.type = 'button';
+  extend.title = 'Extend the TTL by one hour';
+  extend.disabled = env.state !== 'ready';
+  extend.addEventListener('click', function () {
+    extendEnvironment(env.envId, 1);
+  });
+  cell.appendChild(extend);
 
   const destroy = el('button', 'Destroy', 'danger');
   destroy.type = 'button';
@@ -131,6 +153,7 @@ function render() {
     remaining.dataset.state = env.state;
     row.appendChild(remaining);
 
+    row.appendChild(costCell(env));
     row.appendChild(linkCell(env));
     row.appendChild(actionCell(env));
     ui.body.appendChild(row);
@@ -244,6 +267,31 @@ async function destroyEnvironment(envId) {
   }
 }
 
+async function refreshEstimate() {
+  try {
+    const data = await api('/api/estimate?size=' + encodeURIComponent(ui.size.value) + '&ttlHours=' + encodeURIComponent(ui.ttl.value));
+    ui.estimate.textContent = 'Estimated cost: about $' + data.hourly.toFixed(3) + ' per hour, about $' + data.total.toFixed(2) + ' if it runs the full ' + ui.ttl.value + 'h (an estimate: excludes data transfer and tax).';
+  } catch (err) {
+    ui.estimate.textContent = '';
+  }
+}
+
+async function extendEnvironment(envId, hours) {
+  try {
+    const data = await api('/api/environments/' + encodeURIComponent(envId) + '/extend', {
+      method: 'POST',
+      body: JSON.stringify({ hours: hours }),
+    });
+    setMessage('"' + envId + '" extended by ' + hours + 'h (new expiry ' + data.expiresAt + ').', false);
+    await refresh();
+  } catch (err) {
+    setMessage(err.message, true);
+  }
+}
+
+ui.size.addEventListener('change', refreshEstimate);
+ui.ttl.addEventListener('change', refreshEstimate);
+
 ui.form.addEventListener('submit', async function (event) {
   event.preventDefault();
   ui.createBtn.disabled = true;
@@ -285,5 +333,6 @@ function loop() {
   });
 }
 
+refreshEstimate();
 loop();
 setInterval(updateCountdowns, 20000);

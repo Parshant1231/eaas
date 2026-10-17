@@ -1,4 +1,5 @@
 import type { AwsEnvironment, BuildInfo, EnvState, EnvironmentView } from './types.js';
+import { estimateCost } from './cost.js';
 import { isIpv4 } from './validation.js';
 
 // A failed, fully cleaned-up build stays visible for a while so you can read its log
@@ -46,6 +47,9 @@ function classify(
     } else if (lastCreate !== null && isActive(lastCreate)) {
       state = 'creating';
       note = lastCreate.queued ? 'Waiting in the Jenkins queue' : 'Provisioning';
+    } else if (lastCreate !== null && lastCreate.result === 'SUCCESS' && awsEnv.instanceCount === 0) {
+      state = 'needs-cleanup';
+      note = 'No instances are running (the TTL reaper or a manual action removed them). Destroy to remove the leftovers.';
     } else if (lastCreate !== null && lastCreate.result === 'SUCCESS') {
       state = 'ready';
       note = `Created in ${formatDuration(lastCreate.durationMs)}`;
@@ -92,6 +96,10 @@ function classify(
     ttlHours,
     expiresAt,
     minutesRemaining,
+    cost:
+      size !== null && awsEnv !== null && awsEnv.instanceCount > 0
+        ? estimateCost({ size, launchedAt: awsEnv.launchedAt, expiresAt, now })
+        : null,
     appUrl: showLinks ? `http://${ip}:30080` : null,
     grafanaUrl: showLinks && size === 'medium' ? `http://${ip}:30300` : null,
     latestBuild: latest
