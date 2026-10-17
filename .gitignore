@@ -34,3 +34,6 @@ ansible/inventory/generated/
 
 # Portal build output
 portal/dist/
+
+# Lambda build output
+terraform/guardrails/.build/

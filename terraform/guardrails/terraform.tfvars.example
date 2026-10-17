@@ -1,0 +1,3 @@
+alert_email = "you@example.com"
+# reaper_dry_run = false   # flip only after reading the dry-run logs
+# grace_minutes  = 30
