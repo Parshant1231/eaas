@@ -153,3 +153,28 @@ resource "aws_iam_user_policy_attachment" "portal" {
   user       = aws_iam_user.portal.name
   policy_arn = aws_iam_policy.portal.arn
 }
+
+# Failure injection powers a worker node off through the OS; the test then needs to start it again.
+data "aws_iam_policy_document" "pipeline_inject" {
+  statement {
+    sid       = "StartOnlyEaasInstances"
+    actions   = ["ec2:StartInstances"]
+    resources = ["arn:aws:ec2:${var.region}:*:instance/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "ec2:ResourceTag/project"
+      values   = ["eaas"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "pipeline_inject" {
+  name   = "eaas-jenkins-inject"
+  policy = data.aws_iam_policy_document.pipeline_inject.json
+}
+
+resource "aws_iam_user_policy_attachment" "pipeline_inject" {
+  user       = aws_iam_user.pipeline.name
+  policy_arn = aws_iam_policy.pipeline_inject.arn
+}

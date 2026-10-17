@@ -37,3 +37,6 @@ portal/dist/
 
 # Lambda build output
 terraform/guardrails/.build/
+
+# Failure injection output (written to the workspace by scripts/inject-failure.sh)
+recovery.json
