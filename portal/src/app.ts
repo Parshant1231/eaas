@@ -6,6 +6,8 @@ import type { JenkinsApi } from './jenkins.js';
 import type { JobKind } from './types.js';
 import { startReaperPoller } from './reaper.js';
 import type { DestroyQueue } from './sqs.js';
+import type { InjectApi } from './inject-client.js';
+import { registerInjectRoutes } from './inject-routes.js';
 import { registerTtlRoutes } from './ttl-routes.js';
 import { isValidEnvId, parseCreateRequest } from './validation.js';
 
@@ -20,6 +22,7 @@ export interface Deps {
   jenkins: JenkinsApi;
   aws: AwsReader;
   queue?: DestroyQueue;
+  injector?: InjectApi;
   config: AppConfig;
 }
 
@@ -71,7 +74,7 @@ function mutationGuard(req: Request, res: Response, next: NextFunction): void {
 }
 
 function parseJob(value: string): JobKind | null {
-  return value === 'create' || value === 'destroy' ? value : null;
+  return value === 'create' || value === 'destroy' || value === 'inject' ? value : null;
 }
 
 function parseBuildNumber(value: string): number | null {
@@ -167,6 +170,9 @@ export function createApp(deps: Deps): Express {
   });
 
   registerTtlRoutes(app, { aws, loadEnvironments, serialize, now });
+  if (deps.injector) {
+    registerInjectRoutes(app, { injector: deps.injector, loadEnvironments, serialize });
+  }
 
   app.get('/api/builds/:job/:number/stages', async (req, res) => {
     const job = parseJob(req.params.job);

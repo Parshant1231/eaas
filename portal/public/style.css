@@ -93,3 +93,7 @@ pre#log {
   word-break: break-word;
   margin: 0;
 }
+
+.badge-recovered { color: var(--ok); }
+.badge-notrecovered { color: var(--bad); }
+.timer { margin-left: .4rem; color: var(--muted); }

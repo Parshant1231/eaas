@@ -8,6 +8,7 @@ export interface JenkinsConfig {
   token: string;
   createJob: string;
   destroyJob: string;
+  injectJob: string;
 }
 
 export interface StageInfo {
@@ -99,7 +100,8 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
 
 export function createJenkinsClient(cfg: JenkinsConfig): JenkinsApi {
   const auth = `Basic ${Buffer.from(`${cfg.user}:${cfg.token}`).toString('base64')}`;
-  const jobName = (kind: JobKind): string => (kind === 'create' ? cfg.createJob : cfg.destroyJob);
+  const jobName = (kind: JobKind): string =>
+    kind === 'create' ? cfg.createJob : kind === 'destroy' ? cfg.destroyJob : cfg.injectJob;
 
   async function request(path: string, init: RequestInit = {}, signal?: AbortSignal): Promise<Response> {
     const headers = new Headers(init.headers);

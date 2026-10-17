@@ -2,7 +2,7 @@ import type { CostEstimate } from './cost.js';
 
 export type Size = 'small' | 'medium';
 export type Ttl = 1 | 2 | 4;
-export type JobKind = 'create' | 'destroy';
+export type JobKind = 'create' | 'destroy' | 'inject';
 
 /** What exists in AWS right now (read from VPC and instance tags). */
 export interface AwsEnvironment {

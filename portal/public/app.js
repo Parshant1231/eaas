@@ -333,6 +333,13 @@ function loop() {
   });
 }
 
+window.EAAS = {
+  api: api,
+  el: el,
+  openBuild: openBuild,
+  environments: function () { return environments; },
+};
+
 refreshEstimate();
 loop();
 setInterval(updateCountdowns, 20000);

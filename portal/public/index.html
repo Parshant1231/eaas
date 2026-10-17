@@ -55,6 +55,33 @@
       <p id="empty" class="muted" hidden>No environments yet.</p>
     </section>
 
+    <section class="card">
+      <h2>Failure injection</h2>
+      <p class="muted">Breaks something on a ready <strong>medium</strong> environment and measures how long the platform takes to detect it and recover. One injection at a time.</p>
+      <form id="inject-form" autocomplete="off">
+        <label>Environment
+          <select id="inject-env"></select>
+        </label>
+        <label>Failure
+          <select id="inject-type"></select>
+        </label>
+        <button type="submit" id="inject-btn">Inject failure</button>
+      </form>
+      <p id="inject-desc" class="muted"></p>
+      <p id="inject-message" role="status"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Started</th><th>Environment</th><th>Failure</th><th>Status</th><th>Detected</th><th>Recovered</th><th>Failed requests</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="inject-body"></tbody>
+        </table>
+      </div>
+      <p id="inject-empty" class="muted" hidden>No injections yet.</p>
+    </section>
+
     <section class="card" id="build-panel" hidden>
       <h2 id="build-title">Build</h2>
       <ol id="stages" class="stages"></ol>
@@ -63,5 +90,6 @@
   </main>
 
   <script src="/app.js" defer></script>
+  <script src="/inject.js" defer></script>
 </body>
 </html>
