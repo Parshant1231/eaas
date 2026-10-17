@@ -47,3 +47,39 @@ npm install
 npm run dev              # http://localhost:3000
 npm test
 ```
+
+## TTL auto-destroy, cost and budget
+Every environment carries an `expires-at` tag. A Lambda (EventBridge, every 5 minutes) finds expired
+environments and queues a destroy request in SQS, which the portal turns into the Jenkins destroy job.
+If an environment is still running 30 minutes past expiry, the Lambda terminates its instances directly,
+so billing stops even when the laptop running Jenkins is off. The portal shows an estimated cost and can
+extend a TTL (capped at 4 hours remaining). Alarms email on reaper failure, and a monthly budget alerts
+at 80% actual and 100% forecast. See `docs/decisions/` (ADR-013, ADR-014) and
+`docs/deployment/cost-management.md`.
+
+## TTL auto-destroy, cost and budget
+Every environment carries an `expires-at` tag. A Lambda (EventBridge, every 5 minutes) finds expired
+environments and queues a destroy request in SQS, which the portal turns into the Jenkins destroy job.
+If an environment is still running 30 minutes past expiry, the Lambda terminates its instances directly,
+so billing stops even when the laptop running Jenkins is off. The portal shows an estimated cost and can
+extend a TTL (capped at 4 hours remaining). Alarms email on reaper failure, and a monthly budget alerts
+at 80% actual and 100% forecast. See `docs/decisions/` (ADR-013, ADR-014) and
+`docs/deployment/cost-management.md`.
+
+## TTL auto-destroy, cost and budget
+Every environment carries an `expires-at` tag. A Lambda (EventBridge, every 5 minutes) finds expired
+environments and queues a destroy request in SQS, which the portal turns into the Jenkins destroy job.
+If an environment is still running 30 minutes past expiry, the Lambda terminates its instances directly,
+so billing stops even when the laptop running Jenkins is off. The portal shows an estimated cost and can
+extend a TTL (capped at 4 hours remaining). Alarms email on reaper failure, and a monthly budget alerts
+at 80% actual and 100% forecast. See `docs/decisions/` (ADR-013, ADR-014) and
+`docs/deployment/cost-management.md`.
+
+## TTL auto-destroy, cost and budget
+Every environment carries an `expires-at` tag. A Lambda (EventBridge, every 5 minutes) finds expired
+environments and queues a destroy request in SQS, which the portal turns into the Jenkins destroy job.
+If an environment is still running 30 minutes past expiry, the Lambda terminates its instances directly,
+so billing stops even when the laptop running Jenkins is off. The portal shows an estimated cost and can
+extend a TTL (capped at 4 hours remaining). Alarms email on reaper failure, and a monthly budget alerts
+at 80% actual and 100% forecast. See `docs/decisions/` (ADR-013, ADR-014) and
+`docs/deployment/cost-management.md`.

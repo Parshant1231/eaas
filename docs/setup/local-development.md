@@ -28,3 +28,35 @@ Never run docker compose down -v (it deletes the Jenkins data volume).
 Requires Node >= 20.6. Create the read-only IAM user (terraform/pipeline-iam), an AWS CLI
 profile named eaas-portal, and a Jenkins API token; put them in portal/.env (never commit it).
 Run with npm run dev inside portal/.
+
+## Guardrails (TTL reaper, alarms, budget)
+cd terraform/guardrails
+cp terraform.tfvars.example terraform.tfvars   # set alert_email, keep reaper_dry_run unset first
+terraform init (same backend flags as pipeline-iam, key bootstrap/guardrails.tfstate)
+terraform plan -var-file=terraform.tfvars -out=guardrails.tfplan && terraform apply guardrails.tfplan
+Confirm the SNS email subscription. Then add REAPER_QUEUE_URL (terraform output -raw queue_url) to portal/.env.
+Lambda unit tests: cd lambda/ttl-reaper && python3 -m unittest -v
+
+## Guardrails (TTL reaper, alarms, budget)
+cd terraform/guardrails
+cp terraform.tfvars.example terraform.tfvars   # set alert_email, keep reaper_dry_run unset first
+terraform init (same backend flags as pipeline-iam, key bootstrap/guardrails.tfstate)
+terraform plan -var-file=terraform.tfvars -out=guardrails.tfplan && terraform apply guardrails.tfplan
+Confirm the SNS email subscription. Then add REAPER_QUEUE_URL (terraform output -raw queue_url) to portal/.env.
+Lambda unit tests: cd lambda/ttl-reaper && python3 -m unittest -v
+
+## Guardrails (TTL reaper, alarms, budget)
+cd terraform/guardrails
+cp terraform.tfvars.example terraform.tfvars   # set alert_email, keep reaper_dry_run unset first
+terraform init (same backend flags as pipeline-iam, key bootstrap/guardrails.tfstate)
+terraform plan -var-file=terraform.tfvars -out=guardrails.tfplan && terraform apply guardrails.tfplan
+Confirm the SNS email subscription. Then add REAPER_QUEUE_URL (terraform output -raw queue_url) to portal/.env.
+Lambda unit tests: cd lambda/ttl-reaper && python3 -m unittest -v
+
+## Guardrails (TTL reaper, alarms, budget)
+cd terraform/guardrails
+cp terraform.tfvars.example terraform.tfvars   # set alert_email, keep reaper_dry_run unset first
+terraform init (same backend flags as pipeline-iam, key bootstrap/guardrails.tfstate)
+terraform plan -var-file=terraform.tfvars -out=guardrails.tfplan && terraform apply guardrails.tfplan
+Confirm the SNS email subscription. Then add REAPER_QUEUE_URL (terraform output -raw queue_url) to portal/.env.
+Lambda unit tests: cd lambda/ttl-reaper && python3 -m unittest -v

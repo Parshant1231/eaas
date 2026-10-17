@@ -23,3 +23,51 @@ aws ec2 describe-vpcs --filters "Name=tag:env-id,Values=<env>"
 - Failed builds destroy what they created and verify it (scripts/verify-cleanup.sh)
 - Dedicated IAM user limited to ap-south-1 and eaas-tagged deletes
 - TTL is a tag today; automatic expiry arrives with the Phase 7 Lambda
+
+## TTL enforcement and alerts
+- Every environment has an expires-at tag. A Lambda checks every 5 minutes and requests destruction
+  of expired environments; after a 30-minute grace it terminates the instances itself.
+- Alarms (email) fire if the reaper errors or has not run for 15 minutes.
+- A monthly budget alerts at 80% of actual and 100% of forecast spend (account-wide).
+- The portal shows an estimated cost so far and a projection to expiry. It is an estimate, not a bill.
+- Extend TTL is capped so the remaining time never exceeds 4 hours.
+
+## Verify after any session
+aws ec2 describe-vpcs --filters "Name=tag:project,Values=eaas" --query 'Vpcs[].VpcId' --output text
+aws ec2 describe-instances --filters "Name=tag:project,Values=eaas" "Name=instance-state-name,Values=pending,running" --query 'Reservations[].Instances[].InstanceId' --output text
+
+## TTL enforcement and alerts
+- Every environment has an expires-at tag. A Lambda checks every 5 minutes and requests destruction
+  of expired environments; after a 30-minute grace it terminates the instances itself.
+- Alarms (email) fire if the reaper errors or has not run for 15 minutes.
+- A monthly budget alerts at 80% of actual and 100% of forecast spend (account-wide).
+- The portal shows an estimated cost so far and a projection to expiry. It is an estimate, not a bill.
+- Extend TTL is capped so the remaining time never exceeds 4 hours.
+
+## Verify after any session
+aws ec2 describe-vpcs --filters "Name=tag:project,Values=eaas" --query 'Vpcs[].VpcId' --output text
+aws ec2 describe-instances --filters "Name=tag:project,Values=eaas" "Name=instance-state-name,Values=pending,running" --query 'Reservations[].Instances[].InstanceId' --output text
+
+## TTL enforcement and alerts
+- Every environment has an expires-at tag. A Lambda checks every 5 minutes and requests destruction
+  of expired environments; after a 30-minute grace it terminates the instances itself.
+- Alarms (email) fire if the reaper errors or has not run for 15 minutes.
+- A monthly budget alerts at 80% of actual and 100% of forecast spend (account-wide).
+- The portal shows an estimated cost so far and a projection to expiry. It is an estimate, not a bill.
+- Extend TTL is capped so the remaining time never exceeds 4 hours.
+
+## Verify after any session
+aws ec2 describe-vpcs --filters "Name=tag:project,Values=eaas" --query 'Vpcs[].VpcId' --output text
+aws ec2 describe-instances --filters "Name=tag:project,Values=eaas" "Name=instance-state-name,Values=pending,running" --query 'Reservations[].Instances[].InstanceId' --output text
+
+## TTL enforcement and alerts
+- Every environment has an expires-at tag. A Lambda checks every 5 minutes and requests destruction
+  of expired environments; after a 30-minute grace it terminates the instances itself.
+- Alarms (email) fire if the reaper errors or has not run for 15 minutes.
+- A monthly budget alerts at 80% of actual and 100% of forecast spend (account-wide).
+- The portal shows an estimated cost so far and a projection to expiry. It is an estimate, not a bill.
+- Extend TTL is capped so the remaining time never exceeds 4 hours.
+
+## Verify after any session
+aws ec2 describe-vpcs --filters "Name=tag:project,Values=eaas" --query 'Vpcs[].VpcId' --output text
+aws ec2 describe-instances --filters "Name=tag:project,Values=eaas" "Name=instance-state-name,Values=pending,running" --query 'Reservations[].Instances[].InstanceId' --output text
