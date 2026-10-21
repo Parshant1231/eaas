@@ -60,3 +60,9 @@ terraform init (same backend flags as pipeline-iam, key bootstrap/guardrails.tfs
 terraform plan -var-file=terraform.tfvars -out=guardrails.tfplan && terraform apply guardrails.tfplan
 Confirm the SNS email subscription. Then add REAPER_QUEUE_URL (terraform output -raw queue_url) to portal/.env.
 Lambda unit tests: cd lambda/ttl-reaper && python3 -m unittest -v
+
+## Failure injection
+Create a Jenkins pipeline job named eaas-inject from jenkins/Jenkinsfile.inject (Pipeline script
+from SCM), run it once so Jenkins learns its parameters, then restart the portal.
+The job needs a ready MEDIUM environment. Results are archived as recovery.json on each build
+and listed in the portal. ./scripts/summarize-injections.sh prints the summary table.

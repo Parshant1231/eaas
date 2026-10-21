@@ -83,3 +83,12 @@ so billing stops even when the laptop running Jenkins is off. The portal shows a
 extend a TTL (capped at 4 hours remaining). Alarms email on reaper failure, and a monthly budget alerts
 at 80% actual and 100% forecast. See `docs/decisions/` (ADR-013, ADR-014) and
 `docs/deployment/cost-management.md`.
+
+## Failure injection and recovery
+On a ready medium environment the portal can break something and measure the recovery: kill an
+API pod, crash the node agent service, power off the worker node, spike CPU, or fill the disk.
+A Jenkins job runs the injection, polls the cluster and the alerts, counts failed user requests
+with a once-per-second probe, annotates the environment's Grafana dashboard and archives a
+`recovery.json`. The portal lists every run with its detection and recovery times.
+See `docs/testing/failure-injection-results.md` (definitions and measured numbers) and
+`docs/decisions/` (ADR-015, ADR-016).

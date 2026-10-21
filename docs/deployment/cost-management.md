@@ -71,3 +71,8 @@ aws ec2 describe-instances --filters "Name=tag:project,Values=eaas" "Name=instan
 ## Verify after any session
 aws ec2 describe-vpcs --filters "Name=tag:project,Values=eaas" --query 'Vpcs[].VpcId' --output text
 aws ec2 describe-instances --filters "Name=tag:project,Values=eaas" "Name=instance-state-name,Values=pending,running" --query 'Reservations[].Instances[].InstanceId' --output text
+
+## Failure injection costs
+- A medium environment costs about $0.10 per hour; a full set of runs (5 types x 3) takes about 2 hours.
+- A powered-off worker stops compute billing but keeps its disk; the test restarts it afterwards.
+- Always destroy the test environment and run the verification commands above when finished.
