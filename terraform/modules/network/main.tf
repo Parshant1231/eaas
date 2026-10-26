@@ -98,3 +98,11 @@ resource "aws_vpc_security_group_ingress_rule" "grafana_nodeport" {
   ip_protocol       = "tcp"
   description       = "Grafana (NodePort) from operator IP only"
 }
+
+# The VPC's default security group allows all traffic between its members.
+# Managing it with no rules locks it down; nothing in this project uses it.
+resource "aws_default_security_group" "default" {
+  vpc_id = aws_vpc.this.id
+
+  tags = { Name = "${var.env_id}-default-locked" }
+}

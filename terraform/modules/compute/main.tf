@@ -15,6 +15,7 @@ resource "aws_instance" "node" {
   subnet_id              = var.subnet_id
   vpc_security_group_ids = [var.security_group_id]
   key_name               = aws_key_pair.this.key_name
+  ebs_optimized          = true
 
   metadata_options {
     http_endpoint = "enabled"
