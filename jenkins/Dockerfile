@@ -50,6 +50,23 @@ RUN python3 -m venv /opt/ansible-venv \
  && rm /tmp/requirements.txt
 ENV PATH="/opt/ansible-venv/bin:${PATH}"
 
+ARG TRIVY_VERSION
+ARG CHECKOV_VERSION
+
+# Trivy (checksum verified)
+RUN set -eux; cd /tmp; \
+    curl -fsSLO "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"; \
+    curl -fsSLO "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt"; \
+    grep "trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" "trivy_${TRIVY_VERSION}_checksums.txt" | sha256sum -c -; \
+    tar -xzf "trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" trivy; \
+    install -m 0755 trivy /usr/local/bin/trivy; \
+    rm -f trivy "trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" "trivy_${TRIVY_VERSION}_checksums.txt"
+
+# Checkov in its own venv (its dependencies must not clash with Ansible's)
+RUN python3 -m venv /opt/checkov-venv \
+ && /opt/checkov-venv/bin/pip install --no-cache-dir --retries 10 --timeout 60 "checkov==${CHECKOV_VERSION}" \
+ && ln -s /opt/checkov-venv/bin/checkov /usr/local/bin/checkov
+
 USER jenkins
 
 COPY --chown=jenkins:jenkins jenkins/plugins.txt /usr/share/jenkins/ref/plugins.txt

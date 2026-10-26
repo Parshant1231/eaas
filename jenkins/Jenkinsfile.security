@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        timeout(time: 25, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+
+    stages {
+        stage('Terraform (gate)') {
+            steps { sh './scripts/security-scan.sh iac' }
+        }
+        stage('Images (gate)') {
+            steps { sh './scripts/security-scan.sh images' }
+        }
+        stage('Secrets (gate)') {
+            steps { sh './scripts/security-scan.sh secrets' }
+        }
+        stage('Reports (informational)') {
+            steps { sh './scripts/security-scan.sh report' }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'security-report/**', allowEmptyArchive: true
+        }
+    }
+}

@@ -11,6 +11,9 @@ HELM_VERSION="${HELM_VERSION%%+*}"
 K3S_VERSION="$(sed -nE 's/^k3s_version: "(.*)"$/\1/p' ansible/playbooks/group_vars/all.yml)"
 KUBECTL_VERSION="${K3S_VERSION%%+*}"
 STATE_BUCKET="$(terraform -chdir=terraform/backend output -raw state_bucket_name)"
+source "$ROOT/jenkins/tool-versions.env"
+[[ "${TRIVY_VERSION:-}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]   || { echo "bad trivy version in jenkins/tool-versions.env" >&2; exit 1; }
+[[ "${CHECKOV_VERSION:-}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "bad checkov version in jenkins/tool-versions.env" >&2; exit 1; }
 
 [[ "$TERRAFORM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "bad terraform version: $TERRAFORM_VERSION" >&2; exit 1; }
 [[ "$AWSCLI_VERSION" =~ ^2\.[0-9]+\.[0-9]+$ ]]        || { echo "bad aws cli version: $AWSCLI_VERSION" >&2; exit 1; }
@@ -24,6 +27,8 @@ TERRAFORM_VERSION=$TERRAFORM_VERSION
 AWSCLI_VERSION=$AWSCLI_VERSION
 KUBECTL_VERSION=$KUBECTL_VERSION
 HELM_VERSION=$HELM_VERSION
+TRIVY_VERSION=$TRIVY_VERSION
+CHECKOV_VERSION=$CHECKOV_VERSION
 EAAS_STATE_BUCKET=$STATE_BUCKET
 ENVEOF
 

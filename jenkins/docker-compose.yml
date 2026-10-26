@@ -8,6 +8,8 @@ services:
         AWSCLI_VERSION: ${AWSCLI_VERSION:?run scripts/build-jenkins-image.sh}
         KUBECTL_VERSION: ${KUBECTL_VERSION:?run scripts/build-jenkins-image.sh}
         HELM_VERSION: ${HELM_VERSION:?run scripts/build-jenkins-image.sh}
+        TRIVY_VERSION: ${TRIVY_VERSION:?run scripts/build-jenkins-image.sh}
+        CHECKOV_VERSION: ${CHECKOV_VERSION:?run scripts/build-jenkins-image.sh}
     image: eaas-jenkins:local
     container_name: eaas-jenkins
     restart: unless-stopped
