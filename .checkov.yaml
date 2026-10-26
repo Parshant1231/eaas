@@ -1,0 +1,17 @@
+framework:
+  - terraform
+compact: true
+quiet: true
+skip-download: true
+skip-check:
+  # Detailed (1-minute) monitoring costs about $2 per instance per month; node_exporter and Prometheus already give metrics
+  - CKV_AWS_126
+  # Nodes need public IPs: Ansible and kubectl reach them from the operator machine (ADR-004); access is limited to one /32
+  - CKV_AWS_88
+  - CKV_AWS_130
+  # Outbound internet is required for package installs and image pulls; there is deliberately no NAT gateway (cost)
+  - CKV_AWS_382
+  # VPC flow logs add cost and storage for environments that live at most four hours
+  - CKV2_AWS_11
+  # Nodes need no AWS API access; attaching a role would only add a credential an attacker could steal
+  - CKV2_AWS_41

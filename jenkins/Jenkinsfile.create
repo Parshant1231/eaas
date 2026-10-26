@@ -56,6 +56,13 @@ pipeline {
             }
         }
 
+        stage('Security scan') {
+            steps {
+                sh './scripts/security-scan.sh iac'
+                sh './scripts/security-scan.sh images'
+            }
+        }
+
         stage('Provision infrastructure') {
             steps {
                 lock('eaas-provision') {

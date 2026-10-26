@@ -40,3 +40,6 @@ terraform/guardrails/.build/
 
 # Failure injection output (written to the workspace by scripts/inject-failure.sh)
 recovery.json
+
+# Scan output
+security-report/
