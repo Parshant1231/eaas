@@ -42,6 +42,7 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_security_group" "nodes" {
+  # checkov:skip=CKV2_AWS_5: Attached dynamically by compute instances
   name        = "${var.env_id}-nodes"
   description = "EaaS nodes"
   vpc_id      = aws_vpc.this.id
